@@ -3,13 +3,7 @@ FROM repocket/repocket:latest
 ENV TZ=Asia/Shanghai \
     CLASH_SUB_BASE64="" \
     RP_EMAIL="" \
-    RP_API_KEY="" \
-    HTTP_PROXY=http://127.0.0.1:7890 \
-    HTTPS_PROXY=http://127.0.0.1:7890 \
-    http_proxy=http://127.0.0.1:7890 \
-    https_proxy=http://127.0.0.1:7890 \
-    ALL_PROXY=socks5://127.0.0.1:7891 \
-    NO_PROXY=localhost,127.0.0.1
+  RP_API_KEY=""
 
 WORKDIR /app
 
