@@ -12,7 +12,7 @@ services:
       - "7891:7891"
       - "9090:9090"
     environment:
-      CLASH_SUB_URL: "${CLASH_SUB_URL:-}"
+      CLASH_SUB_BASE64: "${CLASH_SUB_BASE64:-}"
       RP_EMAIL: "${RP_EMAIL:-}"
       RP_API_KEY: "${RP_API_KEY:-}"
       HTTP_PROXY: "http://127.0.0.1:7890"
