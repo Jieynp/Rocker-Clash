@@ -10,6 +10,6 @@ services:
       RP_API_KEY: ${RP_API_KEY:?set RP_API_KEY in .env}
       CONFIG_YAML_B64: ${CONFIG_YAML_B64:?set CONFIG_YAML_B64 in .env}
       MIHOMO_HTTP_PROXY: ${MIHOMO_HTTP_PROXY:-http://127.0.0.1:7890}
-      MIHOMO_SOCKS_PROXY: ${MIHOMO_SOCKS_PROXY:-socks5h://127.0.0.1:7891}
+      MIHOMO_SOCKS_PROXY: ${MIHOMO_SOCKS_PROXY:-socks5h://127.0.0.1:7890}
     ports:
       - "9090:9090"
