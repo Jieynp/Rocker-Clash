@@ -5,7 +5,23 @@ FROM repocket/repocket:latest
 
 USER root
 COPY --from=mihomo /mihomo /mihomo
-RUN mkdir -p /root/.config/mihomo \
+RUN if command -v apk >/dev/null 2>&1; then \
+        apk add --no-cache proxychains-ng; \
+    elif command -v apt-get >/dev/null 2>&1; then \
+        apt-get update \
+        && apt-get install -y --no-install-recommends proxychains4 \
+        && rm -rf /var/lib/apt/lists/*; \
+    else \
+        echo 'Neither apk nor apt-get is available' >&2 \
+        && exit 1; \
+    fi \
+    && mkdir -p /root/.config/mihomo \
+    && printf '%s\n' \
+        'strict_chain' \
+        'proxy_dns' \
+        '[ProxyList]' \
+        'socks5 127.0.0.1 7891' \
+        > /etc/proxychains.conf \
     && cat > /usr/local/bin/repocket-mihomo-entrypoint <<'EOF'
 #!/bin/sh
 set -eu
@@ -40,7 +56,7 @@ export https_proxy="$HTTPS_PROXY"
 export all_proxy="$ALL_PROXY"
 
 while :; do
-    node /app/dist/index.js || echo 'Repocket exited; restarting in 5 seconds' >&2
+    proxychains4 -q node /app/dist/index.js || echo 'Repocket exited; restarting in 5 seconds' >&2
     sleep 5
 done
 EOF
