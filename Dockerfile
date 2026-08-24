@@ -42,6 +42,7 @@ export all_proxy="$ALL_PROXY"
 exec "$@"
 EOF
 RUN chmod 0755 /mihomo /usr/local/bin/repocket-mihomo-entrypoint
+RUN test -x /usr/local/bin/repocket-mihomo-entrypoint
 
 ENV MIHOMO_HTTP_PROXY=http://127.0.0.1:7890 \
     MIHOMO_SOCKS_PROXY=socks5h://127.0.0.1:7891
