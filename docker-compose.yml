@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   repocket-mihomo:
     build:
@@ -7,18 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: repocket-mihomo
     restart: unless-stopped
-    ports:
-      - "7890:7890"
-      - "7891:7891"
-      - "9090:9090"
     environment:
-      CLASH_SUB_BASE64: "${CLASH_SUB_BASE64:-}"
-      RP_EMAIL: "${RP_EMAIL:-}"
-      RP_API_KEY: "${RP_API_KEY:-}"
-      HTTP_PROXY: "http://127.0.0.1:7890"
-      HTTPS_PROXY: "http://127.0.0.1:7890"
-      http_proxy: "http://127.0.0.1:7890"
-      https_proxy: "http://127.0.0.1:7890"
-      ALL_PROXY: "socks5://127.0.0.1:7891"
-      NO_PROXY: "localhost,127.0.0.1"
-    network_mode: bridge
+      RP_EMAIL: ${RP_EMAIL:?set RP_EMAIL in .env}
+      RP_API_KEY: ${RP_API_KEY:?set RP_API_KEY in .env}
+      CONFIG_YAML_B64: ${CONFIG_YAML_B64:?set CONFIG_YAML_B64 in .env}
+      MIHOMO_HTTP_PROXY: ${MIHOMO_HTTP_PROXY:-http://127.0.0.1:7890}
+      MIHOMO_SOCKS_PROXY: ${MIHOMO_SOCKS_PROXY:-socks5h://127.0.0.1:7891}
+    ports:
+      - "9090:9090"
