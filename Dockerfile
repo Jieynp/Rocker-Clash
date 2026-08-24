@@ -13,13 +13,14 @@ ENV TZ=Asia/Shanghai \
 
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
         bash \
         curl \
         ca-certificates \
-        tzdata \
-    && rm -rf /var/lib/apt/lists/*
+        coreutils \
+        gzip \
+        libc6-compat \
+        tzdata
 
 RUN ARCH=$(uname -m) && \
     case "$ARCH" in \
