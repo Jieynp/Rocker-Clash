@@ -48,12 +48,7 @@ if ! kill -0 "$mihomo_pid" 2>/dev/null; then
     exit 1
 fi
 
-export HTTP_PROXY="${MIHOMO_HTTP_PROXY}"
-export HTTPS_PROXY="${MIHOMO_HTTP_PROXY}"
-export ALL_PROXY="${MIHOMO_SOCKS_PROXY}"
-export http_proxy="$HTTP_PROXY"
-export https_proxy="$HTTPS_PROXY"
-export all_proxy="$ALL_PROXY"
+unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy
 
 while :; do
     proxychains4 -f /etc/proxychains.conf node /app/dist/index.js || echo 'Repocket exited; restarting in 5 seconds' >&2
