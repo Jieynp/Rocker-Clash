@@ -39,7 +39,7 @@ export http_proxy="$HTTP_PROXY"
 export https_proxy="$HTTPS_PROXY"
 export all_proxy="$ALL_PROXY"
 
-exec "$@"
+exec node /app/dist/index.js
 EOF
 RUN sed -i 's/\r$//' /usr/local/bin/repocket-mihomo-entrypoint \
     && chmod 0755 /mihomo /usr/local/bin/repocket-mihomo-entrypoint
