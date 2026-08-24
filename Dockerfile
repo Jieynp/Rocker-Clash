@@ -1,33 +1,50 @@
+# syntax=docker/dockerfile:1
+FROM metacubex/mihomo:v1.19.30 AS mihomo
+
 FROM repocket/repocket:latest
 
-ENV TZ=Asia/Shanghai \
-    CLASH_SUB_BASE64="" \
-    RP_EMAIL="" \
-  RP_API_KEY=""
+USER root
+COPY --from=mihomo /mihomo /mihomo
+RUN mkdir -p /root/.config/mihomo \
+    && cat > /usr/local/bin/repocket-mihomo-entrypoint <<'EOF'
+#!/bin/sh
+set -eu
 
-WORKDIR /app
+: "${RP_EMAIL:?RP_EMAIL is required}"
+: "${RP_API_KEY:?RP_API_KEY is required}"
+: "${CONFIG_YAML_B64:?CONFIG_YAML_B64 is required}"
 
-RUN apk add --no-cache \
-        bash \
-        curl \
-        ca-certificates \
-        coreutils \
-        gzip \
-        libc6-compat \
-        tzdata
+config_dir=/root/.config/mihomo
+mkdir -p "$config_dir"
+printf '%s' "$CONFIG_YAML_B64" | base64 -d > "$config_dir/config.yaml"
 
-RUN ARCH=$(uname -m) && \
-    case "$ARCH" in \
-      x86_64) MIHOMO_ARCH=amd64 ;; \
-      aarch64|arm64) MIHOMO_ARCH=arm64 ;; \
-      armv7l) MIHOMO_ARCH=armv7 ;; \
-      *) echo "Unsupported arch: $ARCH" && exit 1 ;; \
-    esac && \
-    curl -fsSL "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.30/mihomo-linux-${MIHOMO_ARCH}-v1.19.30.gz" -o /tmp/mihomo.gz && \
-    gzip -dc /tmp/mihomo.gz > /usr/local/bin/mihomo && \
-    chmod +x /usr/local/bin/mihomo && \
-    rm -f /tmp/mihomo.gz
+/mihomo -d "$config_dir" &
+mihomo_pid=$!
 
-EXPOSE 7890 7891 9090
+cleanup() {
+    kill "$mihomo_pid" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
 
-CMD ["/bin/bash", "-lc", "set -eu -o pipefail; mkdir -p /etc/mihomo; cat > /etc/mihomo/config.yaml <<'EOF'\nmixed-port: 7890\nsocks-port: 7891\nallow-lan: true\nbind-address: \"*\"\nmode: rule\nlog-level: info\nexternal-controller: \"0.0.0.0:9090\"\nsecret: \"\"\n\nproxy-groups:\n  - name: \"PROXY\"\n    type: select\n    proxies:\n      - \"DIRECT\"\n\nrules:\n  - MATCH,DIRECT\nEOF\nif [ -n \"${CLASH_SUB_BASE64:-}\" ]; then\n  echo \"Decoding Base64 Mihomo configuration...\";\n  printf '%s' \"${CLASH_SUB_BASE64}\" | base64 --decode > /etc/mihomo/subscription.yaml;\n  if [ ! -s /etc/mihomo/subscription.yaml ]; then\n    echo \"Decoded configuration is empty\";\n    exit 1;\n  fi;\n  cp /etc/mihomo/subscription.yaml /etc/mihomo/config.yaml;\nfi;\nexport HTTP_PROXY=\"http://127.0.0.1:7890\";\nexport HTTPS_PROXY=\"http://127.0.0.1:7890\";\nexport http_proxy=\"http://127.0.0.1:7890\";\nexport https_proxy=\"http://127.0.0.1:7890\";\nexport ALL_PROXY=\"socks5://127.0.0.1:7891\";\nexport NO_PROXY=\"localhost,127.0.0.1\";\n/usr/local/bin/mihomo -d /etc/mihomo -f /etc/mihomo/config.yaml > /var/log/mihomo.log 2>&1 &\nfor i in $(seq 1 30); do\n  if curl -fsS http://127.0.0.1:9090 >/dev/null 2>&1; then\n    break;\n  fi;\n  sleep 1;\ndone;\nif [ -z \"${RP_EMAIL:-}\" ] || [ -z \"${RP_API_KEY:-}\" ]; then\n  echo \"Missing RP_EMAIL or RP_API_KEY environment variables\";\n  exit 1;\nfi;\nexec env RP_EMAIL=\"${RP_EMAIL}\" RP_API_KEY=\"${RP_API_KEY}\" repocket" ]
+sleep 2
+if ! kill -0 "$mihomo_pid" 2>/dev/null; then
+    echo 'Mihomo exited before Repocket could start' >&2
+    exit 1
+fi
+
+export HTTP_PROXY="${MIHOMO_HTTP_PROXY}"
+export HTTPS_PROXY="${MIHOMO_HTTP_PROXY}"
+export ALL_PROXY="${MIHOMO_SOCKS_PROXY}"
+export http_proxy="$HTTP_PROXY"
+export https_proxy="$HTTPS_PROXY"
+export all_proxy="$ALL_PROXY"
+
+exec "$@"
+EOF
+RUN chmod 0755 /mihomo /usr/local/bin/repocket-mihomo-entrypoint
+
+ENV MIHOMO_HTTP_PROXY=http://127.0.0.1:7890 \
+    MIHOMO_SOCKS_PROXY=socks5h://127.0.0.1:7891
+
+EXPOSE 9090 7890 7891
+ENTRYPOINT ["/usr/local/bin/repocket-mihomo-entrypoint"]
