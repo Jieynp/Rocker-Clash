@@ -56,7 +56,7 @@ export https_proxy="$HTTPS_PROXY"
 export all_proxy="$ALL_PROXY"
 
 while :; do
-    proxychains4 -q node /app/dist/index.js || echo 'Repocket exited; restarting in 5 seconds' >&2
+    proxychains4 -f /etc/proxychains.conf node /app/dist/index.js || echo 'Repocket exited; restarting in 5 seconds' >&2
     sleep 5
 done
 EOF
