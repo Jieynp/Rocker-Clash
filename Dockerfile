@@ -20,7 +20,7 @@ RUN if command -v apk >/dev/null 2>&1; then \
         'strict_chain' \
         'proxy_dns' \
         '[ProxyList]' \
-        'socks5 127.0.0.1 7891' \
+        'http 127.0.0.1 7890' \
         > /etc/proxychains.conf \
     && cat > /usr/local/bin/repocket-mihomo-entrypoint <<'EOF'
 #!/bin/sh
@@ -65,7 +65,7 @@ RUN sed -i 's/\r$//' /usr/local/bin/repocket-mihomo-entrypoint \
 RUN test -x /usr/local/bin/repocket-mihomo-entrypoint
 
 ENV MIHOMO_HTTP_PROXY=http://127.0.0.1:7890 \
-    MIHOMO_SOCKS_PROXY=socks5h://127.0.0.1:7891
+    MIHOMO_SOCKS_PROXY=socks5h://127.0.0.1:7890
 
 EXPOSE 9090 7890 7891
 ENTRYPOINT ["/bin/sh", "/usr/local/bin/repocket-mihomo-entrypoint"]
